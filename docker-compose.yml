@@ -7,7 +7,7 @@ services:
       - "80:80"
     restart: always
     environment:
-      - REACT_APP_BACKEND_URL=http://backend:8000/api/ 
+      - REACT_APP_BACKEND_URL=http://18.223.111.185:8000/api/
 
   backend:
     image: 468674686595.dkr.ecr.us-east-2.amazonaws.com/my-backend-app:latest

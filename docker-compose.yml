@@ -2,15 +2,12 @@ version: '3.8'
 
 services:
   frontend:
-   build:
-      context: ./my-frontend-app
-      args:
-        # Pass the EC2 Public IP as a build argument to the frontend Dockerfile
-        REACT_APP_BACKEND_URL: http://18.223.111.185:8000/api/
-      image: 468674686595.dkr.ecr.us-east-2.amazonaws.com/my-frontend-app:latest
-      ports:
+    image: 468674686595.dkr.ecr.us-east-2.amazonaws.com/my-frontend-app:latest
+    ports:
       - "80:80"
-      restart: always
+    restart: always
+    environment:
+      - REACT_APP_BACKEND_URL=http://18.223.111.185:8000/api/
 
   backend:
     image: 468674686595.dkr.ecr.us-east-2.amazonaws.com/my-backend-app:latest

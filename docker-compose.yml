@@ -20,7 +20,7 @@ services:
       MYSQL_HOST: db 
       MYSQL_PORT: 3306
       DJANGO_SECRET_KEY: "3c&=a=*1yqc-bdvzp==%uc*ao4ye!!^7or&ss6+k0wbr5o@l_k"
-      DJANGO_ALLOWED_HOSTS: "*" 
+      DJANGO_ALLOWED_HOSTS: "18.223.111.185,backend,localhost,127.0.0.1" 
       DJANGO_DEBUG: "False" 
 
     depends_on:

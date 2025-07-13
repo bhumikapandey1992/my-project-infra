@@ -32,8 +32,8 @@ jobs:
        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
        AWS_REGION: ${{ secrets.AWS_REGION }}
       run:
-        cd my-frontend-app
-        docker buildx build --platform linux/amd64 --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" -t "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/my-frontend-app:latest --no-cache --force-rm --push .
+        cd my-frontend-app && \
+        docker buildx build --platform linux/amd64 --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" -t "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/my-frontend-app:latest --no-cache --force-rm --push . && \
         cd ..
         
     # Build and push Backend Docker image to ECR
@@ -43,9 +43,9 @@ jobs:
        AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
        # Navigate to the backend application directory
-       cd my-backend-app
+       cd my-backend-app && \
        # Build and push the backend image for linux/amd64
-       docker buildx build --platform linux/amd64 -t "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/my-backend-app:latest --push .
+       docker buildx build --platform linux/amd64 -t "${AWS_ACCOUNT_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/my-backend-app:latest --push . && \
        cd .. # Go back to root of my-project-infra
 
     - name: Deploy to EC2 via SSH

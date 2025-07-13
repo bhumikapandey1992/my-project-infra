@@ -1,0 +1,84 @@
+name: CI/CD pipeline for AWS EC2
+
+on:
+ push:
+  branches:
+   - main #trigger this workflow when changes are pushed to the 'main' branch
+   
+jobs: 
+ build-and-deploy:
+   runs-on: ubuntu-latest
+
+   steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # Use GitHub Secret for Access Key ID
+       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # Use GitHub Secret for Secret Access Key
+       aws-region: ${{ secrets.AWS_REGION }} # Use GitHub Secret for AWS Region
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2 # Action to log in to ECR
+
+    # Build and push frontend docker image to ECR
+    - name: Build and push Frontend Image to ECR
+      env:
+       # Pass the EC2_HOST (Public IP) as a build argument to React
+       REACT_APP_BACKEND_URL: http://${{ secrets.EC2_HOST }}:8000/api/
+       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+       AWS_REGION: ${{ secrets.AWS_REGION }}
+      run:
+        cd my-frontend-app
+        docker buildx build --platform linux/amd64 \
+         --build-arg REACT_APP_BACKEND_URL="${REACT_APP_BACKEND_URL}" \
+         -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/my-frontend-app:latest \
+         --no-cache --force-rm --push .
+        cd ..
+        
+    # Build and push Backend Docker image to ECR
+    - name: Build and Push Backend Image to ECR
+      env:
+       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+       AWS_REGION: ${{ secrets.AWS_REGION }}
+      run: |
+       # Navigate to the backend application directory
+       cd my-backend-app
+       # Build and push the backend image for linux/amd64
+       docker buildx build --platform linux/amd64 \
+       -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/my-backend-app:latest \
+       --push .
+       cd .. # Go back to root of my-project-infra
+
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.3 # Action to execute commands via SSH
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+                cd ~/my-project-infra
+                git pull origin main
+                aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+                docker-compose down -v 
+                docker-compose pull
+                docker-compose up -d
+                sleep 10
+                BACKEND_CONTAINER_ID=$(docker ps -aqf "name=my-project-infra-backend-1")
+                docker exec $BACKEND_CONTAINER_ID python manage.py migrate
+                # Optionally, create a superuser (if not already created)
+                # docker exec -it $BACKEND_CONTAINER_ID python manage.py createsuperuser --noinput || true
+                echo "Deployment complete!"
+
+
+
+
+
+
+
+
+    
+   

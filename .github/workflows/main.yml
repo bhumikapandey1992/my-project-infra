@@ -45,7 +45,7 @@
           - name: Build and Push Frontend Image to ECR
             env:
               # Pass the EC2_HOST (Public IP) as a build argument to React
-              REACT_APP_BACKEND_URL: http://${{ secrets.EC2_HOST }}:8000/api/
+              REACT_APP_BACKEND_URL: https://theproductpeek.shop/api/
               AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
               AWS_REGION: ${{ secrets.AWS_REGION }}
             run: |
